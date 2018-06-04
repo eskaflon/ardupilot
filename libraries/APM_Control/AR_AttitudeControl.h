@@ -22,6 +22,11 @@
 #define AR_ATTCONTROL_THR_SPEED_FILT    10.00f
 #define AR_ATTCONTROL_DT                0.02f
 #define AR_ATTCONTROL_TIMEOUT_MS        200
+#define AR_ATTCONTROL_THR_PITCH_P       0.57f
+#define AR_ATTCONTROL_THR_PITCH_I       0.00f
+#define AR_ATTCONTROL_THR_PITCH_IMAX    1.00f
+#define AR_ATTCONTROL_THR_PITCH_D       0.00f
+#define AR_ATTCONTROL_THR_PITCH_FILT    10.0f
 
 // throttle/speed control maximum acceleration/deceleration (in m/s) (_ACCEL_MAX parameter default)
 #define AR_ATTCONTROL_THR_ACCEL_MAX     2.00f
@@ -78,6 +83,8 @@ public:
     //   cruise speed should be in m/s, cruise throttle should be a number from -1 to +1
     float get_throttle_out_speed(float desired_speed, bool motor_limit_low, bool motor_limit_high, float cruise_speed, float cruise_throttle, float dt);
 
+    float get_throttle_out_from_pitch(float desired_pitch_angle);
+
     // return a throttle output from -1 to +1 to perform a controlled stop.  stopped is set to true once stop has been completed
     float get_throttle_out_stop(bool motor_limit_low, bool motor_limit_high, float cruise_speed, float cruise_throttle, float dt, bool &stopped);
 
@@ -85,7 +92,7 @@ public:
     AC_P& get_steering_angle_p() { return _steer_angle_p; }
     AC_PID& get_steering_rate_pid() { return _steer_rate_pid; }
     AC_PID& get_throttle_speed_pid() { return _throttle_speed_pid; }
-
+    AC_PID& get_bb_pitch_to_throttle(){return _bb_pitch_to_throttle;}
     // get forward speed in m/s (earth-frame horizontal velocity but only along vehicle x-axis).  returns true on success
     bool get_forward_speed(float &speed) const;
 
@@ -125,13 +132,15 @@ private:
     AP_Float _stop_speed;           // speed control stop speed.  Motor outputs to zero once vehicle speed falls below this value
     AP_Float _steer_accel_max;      // steering angle acceleration max in deg/s/s
     AP_Float _steer_rate_max;       // steering rate control maximum rate in deg/s
+    AC_PID   _bb_pitch_to_throttle;
 
     // steering control
     uint32_t _steer_lat_accel_last_ms;  // system time of last call to lateral acceleration controller (i.e. get_steering_out_lat_accel)
     uint32_t _steer_turn_last_ms;   // system time of last call to steering rate controller
     float    _desired_lat_accel;    // desired lateral acceleration (in m/s/s) from latest call to get_steering_out_lat_accel (for reporting purposes)
     float    _desired_turn_rate;    // desired turn rate (in radians/sec) either from external caller or from lateral acceleration controller
-
+    uint32_t _angle_last_ms;
+    float    _desired_angle;
     // throttle control
     uint32_t _speed_last_ms;        // system time of last call to get_throttle_out_speed
     float    _desired_speed;        // last recorded desired speed

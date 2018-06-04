@@ -175,7 +175,8 @@ AR_AttitudeControl::AR_AttitudeControl(AP_AHRS &ahrs) :
     _ahrs(ahrs),
     _steer_angle_p(AR_ATTCONTROL_STEER_ANG_P),
     _steer_rate_pid(AR_ATTCONTROL_STEER_RATE_P, AR_ATTCONTROL_STEER_RATE_I, AR_ATTCONTROL_STEER_RATE_D, AR_ATTCONTROL_STEER_RATE_IMAX, AR_ATTCONTROL_STEER_RATE_FILT, AR_ATTCONTROL_DT, AR_ATTCONTROL_STEER_RATE_FF),
-    _throttle_speed_pid(AR_ATTCONTROL_THR_SPEED_P, AR_ATTCONTROL_THR_SPEED_I, AR_ATTCONTROL_THR_SPEED_D, AR_ATTCONTROL_THR_SPEED_IMAX, AR_ATTCONTROL_THR_SPEED_FILT, AR_ATTCONTROL_DT)
+    _throttle_speed_pid(AR_ATTCONTROL_THR_SPEED_P, AR_ATTCONTROL_THR_SPEED_I, AR_ATTCONTROL_THR_SPEED_D, AR_ATTCONTROL_THR_SPEED_IMAX, AR_ATTCONTROL_THR_SPEED_FILT, AR_ATTCONTROL_DT),
+    _bb_pitch_to_throttle(AR_ATTCONTROL_THR_PITCH_P, AR_ATTCONTROL_THR_PITCH_I, AR_ATTCONTROL_THR_PITCH_IMAX, AR_ATTCONTROL_THR_PITCH_D, AR_ATTCONTROL_THR_PITCH_FILT, AR_ATTCONTROL_DT)
 {
     AP_Param::setup_object_defaults(this, var_info);
 }
@@ -321,6 +322,36 @@ bool AR_AttitudeControl::get_lat_accel(float &lat_accel) const
 // return a throttle output from -1 to +1 given a desired speed in m/s (use negative speeds to travel backwards)
 //   motor_limit should be true if motors have hit their upper or lower limits
 //   cruise speed should be in m/s, cruise throttle should be a number from -1 to +1
+
+
+float AR_AttitudeControl::get_throttle_out_from_pitch(float desired_pitch_angle)
+{
+
+    float actual_angle = _ahrs.pitch_sensor;
+
+
+    _desired_angle = desired_pitch_angle;
+
+    const float angle_error = desired_pitch_angle-actual_angle;
+    _bb_pitch_to_throttle.set_input_filter_all(angle_error);
+
+    const float ff = _bb_pitch_to_throttle.get_ff(desired_pitch_angle);
+
+    const float p = _bb_pitch_to_throttle.get_p();
+
+    const float i = _bb_pitch_to_throttle.get_i();
+
+    const float d = _bb_pitch_to_throttle.get_d();
+
+
+    float throttle_out = -(ff+p+i+d);
+
+
+
+    return throttle_out;
+
+}
+
 float AR_AttitudeControl::get_throttle_out_speed(float desired_speed, bool motor_limit_low, bool motor_limit_high, float cruise_speed, float cruise_throttle, float dt)
 {
     // sanity check dt
