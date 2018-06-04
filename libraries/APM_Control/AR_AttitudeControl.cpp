@@ -168,6 +168,50 @@ const AP_Param::GroupInfo AR_AttitudeControl::var_info[] = {
     // @User: Standard
     AP_GROUPINFO("_DECEL_MAX", 9, AR_AttitudeControl, _throttle_decel_max, 0.00f),
 
+    // @Param: _PITCH_P
+    // @DisplayName: Pitch angle control P gain
+    // @Description: Pitch angle control P gain.  Converts the error between the desired angle and actual angle to a motor output (in the range -1 to +1)
+    // @Range: 0.010 2.000
+    // @Increment: 0.01
+    // @User: Standard
+
+    // @Param: _PITCH_I
+    // @DisplayName: Pitch angle control I gain
+    // @Description: Pitch angle control I gain.  Corrects long term error between the desired angle and actual angle
+    // @Range: 0.000 2.000
+    // @User: Standard
+
+    // @Param: _PITCH_IMAX
+    // @DisplayName: Pitch angle control I gain maximum
+    // @Description: Pitch angle control I gain maximum.  Constraings the maximum motor output (range -1 to +1) that the I term will generate
+    // @Range: 0.000 1.000
+    // @Increment: 0.01
+    // @User: Standard
+
+    // @Param: _PITCH_D
+    // @DisplayName: Pitch angle control D gain
+    // @Description: Pitch angle control D gain.  Compensates for short-term change in desired angle vs actual
+    // @Range: 0.000 0.400
+    // @Increment: 0.001
+    // @User: Standard
+
+    // @Param: _PITCH_FF
+    // @DisplayName: Pitch angle control feed forward
+    // @Description: Pitch angle control feed forward
+    // @Range: 0.000 0.500
+    // @Increment: 0.001
+    // @User: Standard
+
+    // @Param: _PITCH_FILT
+    // @DisplayName: Pitch angle control filter frequency
+    // @Description: Pitch angle control input filter.  Lower values reduce noise but add delay.
+    // @Range: 0.000 100.000
+    // @Increment: 0.1
+    // @Units: Hz
+    // @User: Standard
+    AP_SUBGROUPINFO(_bb_pitch_to_throttle, "_PITCH_", 10, AR_AttitudeControl, AC_PID),
+
+
     AP_GROUPEND
 };
 
