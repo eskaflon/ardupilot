@@ -971,9 +971,21 @@ bool AC_WPNav::get_terrain_offset(float& offset_cm)
 {
     // use range finder if connected
     if (_rangefinder_available && _rangefinder_use) {
-        if (_rangefinder_healthy) {
+        if (_rangefinder_healthy){
             offset_cm = _inav.get_altitude() - _rangefinder_alt_cm;
             return true;
+        } else {
+        	float terr_alt = 0.0f;
+        	float offset_rec = _rangefinder_alt_cm - terr_alt;
+            if (_terrain != nullptr && _terrain->height_above_terrain(terr_alt, true)) {
+            	if (_rangefinder_alt_cm > terr_alt) {
+                    offset_cm = _inav.get_altitude() - ((terr_alt + offset_rec) * 100.0f);
+                    return true;
+            	} else {
+                    offset_cm = _inav.get_altitude() - (terr_alt * 100.0f);
+                    return true;
+            	}
+            }
         }
         return false;
     }
