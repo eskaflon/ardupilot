@@ -966,20 +966,29 @@ void AC_WPNav::calc_spline_pos_vel(float spline_time, Vector3f& position, Vector
 // get terrain's altitude (in cm above the ekf origin) at the current position (+ve means terrain below vehicle is above ekf origin's altitude)
 bool AC_WPNav::get_terrain_offset(float& offset_cm)
 {
-    // use range finder if connected
-    if (_rangefinder_available && _rangefinder_use) {
-        if (_rangefinder_healthy) {
-            offset_cm = _inav.get_altitude() - _rangefinder_alt_cm;
-            return true;
-        }
-        return false;
-    }
+	// use range finder if connected
+	static float _offset_rec_cm = 0.0f;
+	if (_rangefinder_available && _rangefinder_use) {
+		if (_rangefinder_healthy){
+			if (_terrain != nullptr && _terrain->height_above_terrain(_terr_alt, true) && _rangefinder_alt_cm > _terr_alt) {
+				_offset_rec_cm = _rangefinder_alt_cm - (_terr_alt * 100.0f);
+			}
+			offset_cm = _inav.get_altitude() - _rangefinder_alt_cm;
+			return true;
+		} else {
+			if (_terrain != nullptr && _terrain->height_above_terrain(_terr_alt, true)) {
+				offset_cm = _inav.get_altitude() - ((_terr_alt * 100.0f) + _offset_rec_cm);
+				return true;
+			}
+		}
+	}
+	return false;
+
 
 #if AP_TERRAIN_AVAILABLE
     // use terrain database
-    float terr_alt = 0.0f;
-    if (_terrain != nullptr && _terrain->height_above_terrain(terr_alt, true)) {
-        offset_cm = _inav.get_altitude() - (terr_alt * 100.0f);
+    if (_terrain != nullptr && _terrain->height_above_terrain(_terr_alt, true)) {
+        offset_cm = _inav.get_altitude() - (_terr_alt * 100.0f);
         return true;
     }
 #endif

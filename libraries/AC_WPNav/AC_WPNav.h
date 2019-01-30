@@ -321,4 +321,5 @@ protected:
     AP_Int8     _rangefinder_use;
     bool        _rangefinder_healthy = false;
     float       _rangefinder_alt_cm = 0.0f;
-};
+    float       _terr_alt = 0.0f;
+    };
